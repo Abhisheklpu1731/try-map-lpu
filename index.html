@@ -1,1 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Directions Service</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
+
+        #map {
+            width: 100%;
+            height: 70vh;
+        }
+
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        select {
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+
+        #info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+
+<body>
+    <div id="map"></div>
+    <div id="controls">
+        <label for="location">Select a destination:</label>
+        <select id="location" onchange="updateRoute()">
+            <option value="current">Current Location</option>
+            <option value="block25">Block 25</option>
+            <option value="block26">Block 26</option>
+            <option value="block27">Block 27</option>
+            <option value="block28">Block 28</option>
+            <option value="block29">Block 29</option>
+            <option value="block30">Block 30</option>
+            <option value="block31">Block 31</option>
+            <option value="block32">Block 32</option>
+            <option value="block33">Block 33</option>
+            <option value="block34">Block 34</option>
+            <option value="block36">Block 36</option>
+            <option value="block37">Block 37</option>
+            <option value="block38">Block 38</option>
+            <option value="fashion">Fashion</option>
+            <option value="arch">Arch</option>
+            <option value="lit5">Lit(Pharma) Block 5</option>
+            <option value="lit7">Lit(Pharma) Block 7</option>
+        </select>
+    </div>
+    <div id="info"></div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
+
+    <script>
+        const map = L.map('map', { zoomControl: false }).setView([0, 0], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const control = L.Routing.control({
+            routeWhileDragging: true
+        }).addTo(map);
+
+        let currentPositionMarker;
+        let directionsService;
+        let directionsRenderer;
+
+        function initGoogleMaps() {
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                suppressMarkers: true
+            });
+
+            updateRoute(); // Initial route update
+        }
+
+        function updateLocation(position) {
+            const { latitude, longitude } = position.coords;
+
+            if (!currentPositionMarker) {
+                currentPositionMarker = L.marker([latitude, longitude]).addTo(map);
+            } else {
+                currentPositionMarker.setLatLng([latitude, longitude]);
+            }
+
+            map.setView([latitude, longitude], map.getZoom()); // Maintain current zoom level
+        }
+
+        function updateRoute() {
+            const locationSelect = document.getElementById('location');
+            const selectedValue = locationSelect.options[locationSelect.selectedIndex].value;
+
+            switch (selectedValue) {
+                case 'current':
+                    navigator.geolocation.getCurrentPosition(successLocation, errorLocation, {
+                        enableHighAccuracy: true
+                    });
+                    break;
+                case 'block25':
+                    calculateAndDisplayRoute({ lat: 31.2524269616594, lng: 75.70253044336381 });
+                    break;
+                case 'block26':
+                    calculateAndDisplayRoute({ lat: 31.25242020168273, lng: 75.70278636360558 });
+                    break;
+                case 'block27':
+                    calculateAndDisplayRoute({ lat: 31.252460920360136, lng: 75.7033281585063 });
+                    break;
+                case 'block28':
+                    calculateAndDisplayRoute({ lat: 31.252445650858803, lng: 75.70364966322096 });
+                    break;
+                case 'block29':
+                    calculateAndDisplayRoute({ lat: 31.252415111845703, lng: 75.704096197531 });
+                    break;
+                case 'block30':
+                    calculateAndDisplayRoute({ lat: 31.252389662662026, lng: 75.70453677799973 });
+                    break;
+                case 'block31':
+                    calculateAndDisplayRoute({ lat: 31.252201338482738, lng: 75.70458440835911 });
+                    break;
+                case 'block32':
+                    calculateAndDisplayRoute({ lat: 31.251834868746215, lng: 75.7046141773097 });
+                    break;
+                case 'block33':
+                    calculateAndDisplayRoute({ lat: 31.25177888018899, lng: 75.70459036214922 });
+                    break;
+                case 'block34':
+                    calculateAndDisplayRoute({ lat: 31.251422588592348, lng: 75.70489995923535 });
+                    break;
+                case 'block36':
+                    calculateAndDisplayRoute({ lat: 31.25164654346864, lng: 75.7041140589026 });
+                    break;
+                case 'block37':
+                    calculateAndDisplayRoute({ lat: 31.251794149805686, lng: 75.70367347834485 });
+                    break;
+                case 'block38':
+                    calculateAndDisplayRoute({ lat: 31.25221660803114, lng: 75.70323885166626 });
+                    break;
+                case 'fashion':
+                    calculateAndDisplayRoute({ lat: 31.258776086563717, lng: 75.7090615206157 });
+                    break;
+                case 'arch':
+                    calculateAndDisplayRoute({ lat: 31.257125227958618, lng: 75.70801009478461 });
+                    break;
+                case 'lit5':
+                    calculateAndDisplayRoute({ lat: 31.25780391777158, lng: 75.70673336329142 });
+                    break;
+                case 'lit7':
+                    calculateAndDisplayRoute({ lat: 31.256953261856648, lng: 75.70690502482014 });
+                    break;
+                default:
+                    console.log('Invalid selection');
+            }
+        }
+
+        function calculateAndDisplayRoute(destination) {
+            const origin = currentPositionMarker.getLatLng();
+            const waypoints = [
+                L.latLng(origin.lat, origin.lng),
+                L.latLng(destination.lat, destination.lng)
+            ];
+
+            control.setWaypoints(waypoints);
+
+            const request = {
+                origin: new google.maps.LatLng(origin.lat, origin.lng),
+                destination: new google.maps.LatLng(destination.lat, destination.lng),
+                travelMode: 'WALKING'
+            };
+
+            directionsService.route(request, function (result, status) {
+                if (status == 'OK') {
+                    const route = result.routes[0].overview_path.map(point => [point.lat(), point.lng()]);
+                    control.getPlan().setWaypoints(route);
+                    control.route();
+
+                    // Display route information
+                    const infoDiv = document.getElementById('info');
+                    infoDiv.innerHTML = `
+                        <strong>Distance:</strong> ${result.routes[0].legs[0].distance.text}<br>
+                        <strong>Duration:</strong> ${result.routes[0].legs[0].duration.text}<br>
+                        <strong>Instructions:</strong> ${result.routes[0].legs[0].steps.map(step => step.instructions).join('<br>')}
+                    `;
+                } else {
+                    console.log('Error calculating route:', status);
+                }
+            });
+        }
+
+        function successLocation(position) {
+            updateLocation(position);
+            navigator.geolocation.watchPosition(updateLocation);
+        }
+
+        function errorLocation() {
+            console.log('Unable to retrieve your location');
+        }
+
+        navigator.geolocation.getCurrentPosition(successLocation, errorLocation, {
+            enableHighAccuracy: true
+        });
+
+        //-----------------x-xx-x-x-x-x-x-
+        function updateLiveLocation() {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const { latitude, longitude } = position.coords;
+
+            if (currentPositionMarker) {
+                currentPositionMarker.setLatLng([latitude, longitude]);
+                map.setView([latitude, longitude], map.getZoom());
+
+                // Update the route with the new live location
+                updateRoute();
+            }
+        }, function(error) {
+            console.log('Unable to retrieve your live location');
+        }, {
+            enableHighAccuracy: true
+        });
+
+        // Call this function every few seconds to keep updating the live location
+        setTimeout(updateLiveLocation, 5000); // Update every 5 seconds (adjust as needed)
+    }
+
+        //----------x-x-x-x---------------
+
+        updateLiveLocation();
+        initGoogleMaps(); // Initialize Google Maps
+    </script>
+</body>
+
+</html>
 
